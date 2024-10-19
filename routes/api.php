@@ -66,3 +66,5 @@ Route::middleware("auth:sanctum")->group(function () {
 Route::post('/videos/upload', [VideoController::class, 'upload']);
 Route::post('/videos/merge', [VideoController::class, 'merge']);
 Route::get('/videos/status/{jobId}', [VideoController::class, 'status']);
+
+Route::post('videos/upload-from-link', [VideoController::class, 'uploadFromLink']);
