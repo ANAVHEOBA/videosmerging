@@ -1,20 +1,54 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Http\Requests\VideoUploadRequest;
-use App\Http\Requests\VideoMergeRequest;
 use App\Services\PythonVideoMerger;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use App\Http\Requests\VideoMergeRequest;
 
 class VideoController extends Controller
 {
-    private $videoMerger;
+    protected $videoMerger;
 
     public function __construct(PythonVideoMerger $videoMerger)
     {
         $this->videoMerger = $videoMerger;
+    }
+
+    public function upload(Request $request): JsonResponse
+    {
+        $request->validate([
+            'video' => 'required|file|mimetypes:video/*|max:102400' // 100MB max
+        ]);
+
+        try {
+            if (!$request->hasFile('video')) {
+                throw new Exception('No video file provided');
+            }
+
+            $video = $request->file('video');
+            $path = $video->store('uploads', 'public');
+
+            if (!$path) {
+                throw new Exception('Failed to store video file');
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Video uploaded successfully',
+                'path' => $path,
+                'url' => Storage::disk('public')->url($path)
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Video upload failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function merge(VideoMergeRequest $request): JsonResponse
@@ -53,10 +87,30 @@ class VideoController extends Controller
                 'output_url' => Storage::disk('public')->url($outputPath),
                 'file_size' => $fileSize
             ]);
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Video merging failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function status($jobId): JsonResponse
+    {
+        try {
+            // Implement job status checking logic here
+            // This is a placeholder implementation
+            return response()->json([
+                'success' => true,
+                'status' => 'completed', // or 'processing', 'failed', etc.
+                'message' => 'Job status retrieved successfully'
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get job status: ' . $e->getMessage()
             ], 500);
         }
     }
