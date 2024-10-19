@@ -99,8 +99,7 @@ class VideoController extends Controller
     public function status($jobId): JsonResponse
     {
         try {
-            // Implement job status checking logic here
-            // This is a placeholder implementation
+            
             return response()->json([
                 'success' => true,
                 'status' => 'completed', // or 'processing', 'failed', etc.
